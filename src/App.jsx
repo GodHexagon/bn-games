@@ -1,27 +1,36 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
-import { collection, addDoc } from "firebase/firestore"; 
-
-try {
-  const docRef = await addDoc(collection(db, "users"), {
-    first: "Ada",
-    last: "Lovelace",
-    born: 1815
-  });
-  console.log("Document written with ID: ", docRef.id);
-} catch (e) {
-  console.error("Error adding document: ", e);
-}
+import db from "./firebaseConfig"
+import {doc, getDoc, setDoc } from "firebase/firestore"
 
 function App() {
-  const [count, setCount] = useState(0)
+  const countSync = async (num) => {
+    if (num != undefined){
+      setCount(num);
+      await setDoc(doc(db, "host", "primary"), {
+        count: num
+      });
+    }
 
-  const hCount = () => {
-    setCount(count + 1);
-  }
+    const docRef = doc(db, "host", "primary");
+    const docSnap = await getDoc(docRef);
+    const data = docSnap.data();
+    num = parseInt(data.count);
+
+    setCount(num);
+
+    return num;
+  };
+
+  const [count, setCount] = useState(0);
+  countSync();
+
+  const hCountUp = () => {
+    countSync(count + 1);
+  };
 
   return (
     <>
@@ -35,7 +44,7 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={() => hCount()}>
+        <button onClick={() => hCountUp()}>
           count is {count}
         </button>
         <p>
