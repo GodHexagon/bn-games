@@ -19,7 +19,7 @@ function App() {
         <img src={reactLogo} className="logo react" alt="React logo" />
         <p>aaaaaaaaaaaaaaaaa</p>
         <IconButton>
-          <img src={reactLogo} className="logo react" alt="React logo" height='300px' cla />
+          <img src={reactLogo} className="logo react" alt="React logo" height='300px' />
         </IconButton>
       </Container>
     </>
