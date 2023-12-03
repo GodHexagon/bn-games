@@ -3,7 +3,7 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
-import db from "./firebaseConfig"
+import db from "../firebaseConfig"
 import {doc, getDoc, setDoc } from "firebase/firestore"
 
 function App() {
