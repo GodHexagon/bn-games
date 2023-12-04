@@ -5,7 +5,6 @@ import {doc, getDoc, setDoc } from "firebase/firestore"
 //contents
 import reactLogo from './../assets/react.svg'
 // styles
-import './App.css'
 // components
 import StartModal from './startModal'
 // mui componetns
