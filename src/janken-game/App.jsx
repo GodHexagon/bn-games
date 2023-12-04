@@ -7,6 +7,7 @@ import reactLogo from './../assets/react.svg'
 // styles
 import './App.css'
 // components
+import StartModal from './startModal'
 // mui componetns
 import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
@@ -21,6 +22,7 @@ function App() {
         <IconButton>
           <img src={reactLogo} className="logo react" alt="React logo" height='300px' />
         </IconButton>
+        <StartModal />
       </Container>
     </>
   )

@@ -1,11 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './janken-game/App'
-import './index.css'
+import Janken from './janken-game/App'
+//import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <Janken />
   </React.StrictMode>,
 )
 
