@@ -1,9 +1,9 @@
 // react and firebase
 import { useState } from 'react'
-import db from "../firebaseConfig"
+import db from "./../../firebaseConfig"
 import {doc, getDoc, setDoc } from "firebase/firestore"
 //contents
-import reactLogo from './assets/react.svg'
+import reactLogo from './../assets/react.svg'
 // styles
 import './App.css'
 // components
