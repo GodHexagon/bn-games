@@ -12,6 +12,10 @@ import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 
 function App() {
+  const [openStartModal, setOpenStartModal] = useState(true);
+  const hSubmitPassword = (e, password) => {
+    console.log(password);
+  }
 
   return (
     <>
@@ -21,7 +25,10 @@ function App() {
         <IconButton>
           <img src={reactLogo} className="logo react" alt="React logo" height='300px' />
         </IconButton>
-        <StartModal open={true} />
+        <StartModal
+          open={openStartModal}
+          onSubmitPasword={hSubmitPassword}
+        />
       </Container>
     </>
   )

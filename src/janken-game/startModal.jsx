@@ -16,7 +16,7 @@ function a11yProps(index) {
     'aria-controls': `simple-tabpanel-${index}`,
   };
 };
-// タブ内容コンポーネント
+// タブ内容ラッパーコンポーネント
 function TabPanel({ children, index, now }) {
   return (
     <div
@@ -30,10 +30,15 @@ function TabPanel({ children, index, now }) {
   )
 };
 
-function StartModal({open}) {
+function StartModal({
+  open,
+  onSubmitPasword = (e, password) => {},
+}) {
   const [tabIndex, setTabIndex] = useState(0);
+  const [password, setPassword] = useState('');
 
-  const hTabChange = (event, newValue) => {
+  const hTabChange = (event) => {
+    const newValue = event.
     setTabIndex(newValue);
   };
 
@@ -58,8 +63,7 @@ function StartModal({open}) {
             marginBottom: '30px'
           }}>
             <Tabs value={tabIndex} onChange={hTabChange} aria-label='joining type'>
-              <Tab label="New session" {...a11yProps(0)}/>
-              <Tab label="Join session" {...a11yProps(1)}/>
+              <Tab label="合言葉で始める" {...a11yProps(0)}/>
             </Tabs>
           </Box>
           <TabPanel index={0} now={tabIndex}>
@@ -68,12 +72,9 @@ function StartModal({open}) {
               flexFlow: 'column',
               gap: '30px',
             }}>
-              <TextField id='password' label='新しい合言葉' variant='outlined' />
-              <Button variant="contained">Create new session</Button>
+              <TextField id='password' label='合言葉を入力' variant='outlined' onChange={(e) => setPassword(e.target.value)} />
+              <Button variant="contained" onClick={(e) => {onSubmitPasword(e, password)}}>Join</Button>
             </Box>
-          </TabPanel>
-          <TabPanel index={1} now={tabIndex}>
-            <Typography>bbb</Typography>
           </TabPanel>
         </Paper>
       </Modal>
