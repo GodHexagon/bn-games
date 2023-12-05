@@ -21,7 +21,7 @@ function App() {
         <IconButton>
           <img src={reactLogo} className="logo react" alt="React logo" height='300px' />
         </IconButton>
-        <StartModal />
+        <StartModal open={true} />
       </Container>
     </>
   )
