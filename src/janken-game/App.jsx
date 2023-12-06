@@ -1,7 +1,7 @@
 // react and firebase
 import { useState } from 'react'
 import db from "./../../firebaseConfig"
-import {doc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,  collection, query, where, onSnapshot } from "firebase/firestore"
+import {doc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,  collection, query, where, onSnapshot, arrayUnion } from "firebase/firestore"
 //contents
 import reactLogo from './../assets/react.svg'
 // components
@@ -15,16 +15,6 @@ var usPings = [];
 var usSession;
 var ownSessionID = "";
 var replyed = true;
-// 生存確認受け取り
-const disPlayerPing = onSnapshot(doc(db, "player_ping", playerID), async (document) => {
-  console.log("ping updated: ");
-  if(document.data().joining == "?"){
-    console.log("replying:", playerID, "->", ownSessionID);
-    await setDoc(doc(db, "player_ping", playerID), {
-      joining: ownSessionID
-    });
-  }
-});
 function App() {
   const [openStartModal, setOpenStartModal] = useState(true);
 
@@ -101,9 +91,38 @@ function App() {
       });
     }
   };
+  const tryPassword = async (password) => {
+    // 合言葉でDBを検索し変数に格納
+    const q = query(collection(db, "active_sessions"), where("password", "==", password));
+    const querySnapshot = await getDocs(q);
+    var matched;
+    querySnapshot.forEach((doc) => {
+      console.log("matched session:", doc.id, " => ", doc.data());
+      matched = doc;
+    });
+    if(matched === undefined){
+      // 見つからなかったら新規作成
+      const docRef = await addDoc(collection(db, "active_sessions"), {
+        password: password,
+        player_id: [playerID],
+      });
+      ownSessionID = docRef.id;
+
+      console.log("create new session:", docRef.id)
+    }else{
+      const docMatched = doc(db, "active_sessions", matched.id);
+      const usMatched = onSnapshot(docMatched, (e) => {
+        console.log("matched session:", e.id, "|", e.data())
+      });
+      await updateDoc(docMatched, {
+        playerID: arrayUnion(playerID)
+      });
+    }
+  }
+
   // joinボタンを押したイベントハンドラ
   const hSubmitPassword = (e, password) => {
-    resolvePassword(password);
+    tryPassword(password);
   };
 
   return (
