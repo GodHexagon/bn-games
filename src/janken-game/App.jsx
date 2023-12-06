@@ -10,26 +10,39 @@ import StartModal from './startModal'
 import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 
+const playerID = crypto.randomUUID();
+var usPings = [];
+var usSession;
+var ownSessionID = "";
+var replyed = true;
+// 生存確認受け取り
+const disPlayerPing = onSnapshot(doc(db, "player_ping", playerID), async (document) => {
+  console.log("ping updated: ");
+  if(document.data().joining == "?"){
+    console.log("replying:", playerID, "->", ownSessionID);
+    await setDoc(doc(db, "player_ping", playerID), {
+      joining: ownSessionID
+    });
+  }
+});
 function App() {
   const [openStartModal, setOpenStartModal] = useState(true);
-  const playerID = crypto.randomUUID();
-  var subPings = [];
-  var subSession;
-  var ownSessionID = "";
 
-  // 生存確認受け取り
-  const disPlayerPing = onSnapshot(doc(db, "player_ping", playerID), async (document) => {
-    console.log("ping updated: ", document.data());
-    if(document.data() != undefined){
-      await setDoc(doc(db, "player_ping", document.id), {
-        joining: ownSessionID
-      });
-    }
-  });
-  // セッションの確認とその後の処理
-  const resolvePing = async (livings) => {
+  const resReply = async (id, livings) => {
+    // フレッシュな値でDBを更新
+    replyed = true;
+    const docRef = await updateDoc(doc(db, "active_sessions", id), {
+      playerID: livings
+    }, { merge: true });
+    // 満員判定
     if(livings.length < 2){
-      
+      await updateDoc(doc(db, "active_sessions", id), {
+        playerID: [...livings, playerID]
+      }, { merge: true });
+      ownSessionID = id;
+      console.log("joining succesed:", id)
+    }else{
+      console.log("session is full:", id);
     }
   }
 
@@ -38,14 +51,14 @@ function App() {
     // 合言葉でDBを検索しfindDocに格納
     const q = query(collection(db, "active_sessions"), where("password", "==", password));
     const querySnapshot = await getDocs(q);
-    var findDoc;
+    var matched;
     querySnapshot.forEach((doc) => {
       console.log("matched session:", doc.id, " => ", doc.data());
-      findDoc = doc;
+      matched = doc;
       //doc.data().playerID
     });
 
-    if(findDoc === undefined){
+    if(matched === undefined){
       // 見つからなかったら新規作成
       const docRef = await addDoc(collection(db, "active_sessions"), {
         password: password,
@@ -57,21 +70,33 @@ function App() {
     }else{
       // 見つかったら既存プレイヤー全員の生存を確認
       var livings = [];
-      const exisPlayers = findDoc.data().playerID
-      await exisPlayers.forEach(async (id) => {
+      const exisPlayers = matched.data().playerID;
+      replyed = false;
+      // タイムアウトした
+      setTimeout(() => {
+        if(!replyed){
+          resReply(matched.id, livings)
+          exisPlayers.forEach((id) => {
+            deleteDoc(doc(db, "player_ping", id));
+          })
+        }
+      }, 2000);
+      exisPlayers.forEach(async (id, index) => {
         const pingDoc = doc(db, "player_ping", id);
         await setDoc(pingDoc, {
-          joining: ""
+          joining: "?"
         });
-        subPings.push(onSnapshot(pingDoc, (document) => {
-          if(findDoc.id == document.data().joining){
-            livings.push({p: document.id, s: document.data().joining});
+        usPings.push(onSnapshot(pingDoc, (document) => {
+          console.log("got reply:", document.id, "->", document.data())
+          if(matched.id == document.data().joining){
+            livings.push(document.id);
             console.log("living player:", livings)
           }
-          if(subPings.length == livings.length){
-            // 全員分の応答があったら次の処理
-            resolvePing(livings);
+          if(usPings.length == livings.length){
+            // 全員分の応答があった
+            resReply(matched.id, livings);
           }
+          usPings[index]();
         }));
       });
     }
