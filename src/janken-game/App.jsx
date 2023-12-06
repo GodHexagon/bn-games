@@ -12,14 +12,36 @@ import IconButton from '@mui/material/IconButton';
 
 function App() {
   const [openStartModal, setOpenStartModal] = useState(true);
-  const [playerID, setPlayerID] = useState(crypto.randomUUID());
+  const playerID = crypto.randomUUID();
+  var ownSessionID = "";
 
-  const unsub = onSnapshot(doc(db, "player_ping", playerID), async (document) => {
+  // 生存確認受け取り
+  const disPlayerPing = onSnapshot(doc(db, "player_ping", playerID), async (document) => {
     console.log("ping updated: ", document.data());
     if(document.data() != undefined){
-      await deleteDoc(doc(db, "player_ping", document.id))
+      await setDoc(doc(db, "player_ping", document.id), {
+        joining: ownSessionID
+      });
     }
   });
+  // セッションの確認とその後の処理
+  const refreshSession = async (findDoc, livings) => {
+    livings.forEach((living) => {
+      if(findDoc.data().playerID.includes(living)){
+        
+      }
+    });
+
+    if(findDoc.data().playerID.length == 1){
+      await updateDoc(doc(db, "active_sessions", findDoc.id), {
+        playerID: [...findDoc.data().playerID, playerID]
+      }, { merge: true });
+
+      console.log("try to join:", findDoc.id);
+    }else{
+      console.log("session is full:", findDoc.id);
+    }
+  }
 
   // 合言葉を使用したセッション管理関数
   const resolvePassword = async (password) => {
@@ -39,26 +61,27 @@ function App() {
         password: password,
         playerID: [playerID]
       });
+      ownSessionID = docRef.id;
 
       console.log("create new session:", docRef.id)
     }else{
-      // 見つかったらとりあえず参加プレイヤーの生存を確認
-      findDoc.data().playerID.forEach(async (id) => {
-        await setDoc(doc(db, "player_ping", id), {
-          from: playerID,
-          responded: false
+      // 見つかったら既存プレイヤー全員の生存を確認
+      var pings = [];
+      var livings = [];
+      await findDoc.data().playerID.forEach(async (id) => {
+        const pingDoc = doc(db, "player_ping", id);
+        await setDoc(pingDoc, {
+          joining: ""
         });
+        pings.push(onSnapshot(pingDoc, (document) => {
+          livings.push({p: document.id, s: document.data().joining});
+          console.log("reply got:", livings);
+          if(pings.length == livings.length){
+            // 全員分の応答があったら次の処理
+            refreshSession(findDoc, livings);
+          }
+        }));
       });
-
-      if(findDoc.data().playerID.length == 1){
-        await updateDoc(doc(db, "active_sessions", findDoc.id), {
-          playerID: [...findDoc.data().playerID, playerID]
-        }, { merge: true });
-  
-        console.log("try to join:", findDoc.id);
-      }else{
-        console.log("session is full:", findDoc.id);
-      }
     }
   };
   // joinボタンを押したイベントハンドラ
