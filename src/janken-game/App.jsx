@@ -13,6 +13,8 @@ import IconButton from '@mui/material/IconButton';
 function App() {
   const [openStartModal, setOpenStartModal] = useState(true);
   const playerID = crypto.randomUUID();
+  var subPings = [];
+  var subSession;
   var ownSessionID = "";
 
   // 生存確認受け取り
@@ -25,21 +27,9 @@ function App() {
     }
   });
   // セッションの確認とその後の処理
-  const refreshSession = async (findDoc, livings) => {
-    livings.forEach((living) => {
-      if(findDoc.data().playerID.includes(living)){
-        
-      }
-    });
-
-    if(findDoc.data().playerID.length == 1){
-      await updateDoc(doc(db, "active_sessions", findDoc.id), {
-        playerID: [...findDoc.data().playerID, playerID]
-      }, { merge: true });
-
-      console.log("try to join:", findDoc.id);
-    }else{
-      console.log("session is full:", findDoc.id);
+  const resolvePing = async (livings) => {
+    if(livings.length < 2){
+      
     }
   }
 
@@ -66,19 +56,21 @@ function App() {
       console.log("create new session:", docRef.id)
     }else{
       // 見つかったら既存プレイヤー全員の生存を確認
-      var pings = [];
       var livings = [];
-      await findDoc.data().playerID.forEach(async (id) => {
+      const exisPlayers = findDoc.data().playerID
+      await exisPlayers.forEach(async (id) => {
         const pingDoc = doc(db, "player_ping", id);
         await setDoc(pingDoc, {
           joining: ""
         });
-        pings.push(onSnapshot(pingDoc, (document) => {
-          livings.push({p: document.id, s: document.data().joining});
-          console.log("reply got:", livings);
-          if(pings.length == livings.length){
+        subPings.push(onSnapshot(pingDoc, (document) => {
+          if(findDoc.id == document.data().joining){
+            livings.push({p: document.id, s: document.data().joining});
+            console.log("living player:", livings)
+          }
+          if(subPings.length == livings.length){
             // 全員分の応答があったら次の処理
-            refreshSession(findDoc, livings);
+            resolvePing(livings);
           }
         }));
       });
