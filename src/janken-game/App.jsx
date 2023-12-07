@@ -9,6 +9,8 @@ import StartModal from './startModal'
 // mui componetns
 import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
+import CircularProgress from '@mui/material/CircularProgress';
+import Backdrop from '@mui/material/Backdrop'
 
 const gameplnum = 2;
 const playerID = crypto.randomUUID();
@@ -150,8 +152,11 @@ const banned = () => {
 
 function App() {
   const [openStartModal, setOpenStartModal] = useState(true);
+  const [progressing, setProgressing] = useState(false);
   const hSubmitPassword = (e, password) => {
     tryPassword(password);
+    setOpenStartModal(false);
+    setProgressing(true);
   };
 
   return (
@@ -162,11 +167,17 @@ function App() {
         <IconButton>
           <img src={reactLogo} className="logo react" alt="React logo" height='300px' />
         </IconButton>
-        <StartModal
-          open={openStartModal}
-          onSubmitPasword={hSubmitPassword}
-        />
       </Container>
+      <StartModal
+        open={openStartModal}
+        onSubmitPasword={hSubmitPassword}
+      />
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={progressing}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </>
   )
 }
