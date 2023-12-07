@@ -3,12 +3,10 @@ import { useState } from 'react'
 import db from "./../../firebaseConfig"
 import {doc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,  collection, query, where, onSnapshot, arrayUnion } from "firebase/firestore"
 //contents
-import reactLogo from './../assets/react.svg'
-// components
 import StartModal from './startModal'
+import RSPButton from './rspButton'
 // mui componetns
 import Container from '@mui/material/Container';
-import IconButton from '@mui/material/IconButton';
 import CircularProgress from '@mui/material/CircularProgress';
 import Backdrop from '@mui/material/Backdrop'
 
@@ -20,7 +18,7 @@ var pingReplyed = false;
 var joining = false;
 
 function App() {
-// - - - backend with firebase - - -
+// - - - with firebase - - -
   // 生存確定
   const pingExit = async (livings) => {
     if(! pingReplyed){
@@ -155,7 +153,7 @@ function App() {
     console.log("session removed you");
     setProgressing(false);
   }
-// - - - frontend react - - -
+// - - - frontend with react - - -
   const [openStartModal, setOpenStartModal] = useState(true);
   const [progressing, setProgressing] = useState(false);
   const hSubmitPassword = (e, password) => {
@@ -166,12 +164,8 @@ function App() {
 
   return (
     <>
-      <Container sx={{ height: '400px' }}>
-        <img src={reactLogo} className="logo react" alt="React logo" />
-        <p>aaaaaaaaaaaaaaaaa</p>
-        <IconButton>
-          <img src={reactLogo} className="logo react" alt="React logo" height='300px' />
-        </IconButton>
+      <Container>
+        <RSPButton />
       </Container>
       <StartModal
         open={openStartModal}
