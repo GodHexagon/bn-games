@@ -83,6 +83,9 @@ function App() {
   }
   // セッション監視を設定
   const subSession = (newID) => {
+    if(usSession != undefined){
+      usSession();
+    }
     setTimeout(() => {
       usSession = onSnapshot(doc(db, "active_sessions", newID), (e) => {
         onHostChange(e);
@@ -90,9 +93,6 @@ function App() {
     }, 200);
   }
   const tryPassword = async (password) => {
-    if(usSession != undefined){
-      usSession();
-    }
     // 合言葉でDBを検索し変数に格納
     const q = query(collection(db, "active_sessions"), where("password", "==", password));
     const querySnapshot = await getDocs(q);
@@ -165,7 +165,6 @@ function App() {
   return (
     <>
       <Container>
-        <RSPButton />
       </Container>
       <StartModal
         open={openStartModal}
