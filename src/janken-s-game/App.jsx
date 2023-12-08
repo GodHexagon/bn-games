@@ -24,6 +24,7 @@ import Typography from '@mui/material/Typography'
 var usSession;
 var jID = 0;
 var oppJID = 0;
+var password = "";
 function App() {
   // セッション監視を設定
   const subSession = (newID) => {
@@ -85,7 +86,7 @@ function App() {
         ? -1:0)
       );
       setFOppJID(oppJID);
-      setButtonDisabled(false);
+      setRspBDisabled(false);
       scrollBy(0, 600);
       if(e.data().cli != 0 && e.data().host){
         deleteDoc(doc(db, "j_s_session", e.id))
@@ -94,22 +95,38 @@ function App() {
   };
 // - - - frontend with react - - -
   const [progressing, setProgressing] = useState(false);
-  const [buttonDisabled, setButtonDisabled] = useState(false);
-  const [password, setPassword] = useState('');
+  const [buttonDisabled, setButtonDisabled] = useState(true);
+  const [rspBDisabled, setRspBDisabled] = useState(false);
+  const [fpassword, setFPassword] = useState('');
   const [fjID, setFJID] = useState(0);
   const [foppJID, setFOppJID] = useState(0);
   const [win, setWin] = useState(1);// 0:defeat, 1:draw, 2: win
 
   const hSetJID = (e, i) => {
     setFJID(i);
+    if(i != 0 && fpassword != ""){
+      setButtonDisabled(false);
+    }else{
+      setButtonDisabled(true);
+    }
   }
+  const hSetPassword = (e) => {
+    setFPassword(e.target.value);
+    if(fjID != 0 && e.target.value != ""){
+      setButtonDisabled(false);
+    }else{
+      setButtonDisabled(true);
+    }
+  }
+
   const hSubmitPassword = (e) => {
     jID = fjID;
     oppJID = 0;
+    password = fpassword;
     if(jID != 0){
       tryPassword();
       setProgressing(true);
-      setButtonDisabled(true);
+      setRspBDisabled(true);
       setFOppJID(0);
       setWin(1);
     }
@@ -124,14 +141,14 @@ function App() {
           flexFlow: 'column',
           gap: '30px',
         }}>
-          <TextField id='password' label='合言葉を入力' variant='outlined' onChange={(e) => setPassword(e.target.value)} />
+          <TextField id='password' label='合言葉を入力' variant='outlined' onChange={(e) => hSetPassword(e)} />
           <Typography variant='h5'>選択してください</Typography>
           <RSPButton 
-            disabled={buttonDisabled}
+            disabled={rspBDisabled}
             selection={fjID}
             onClick={hSetJID}
           />
-          <Button variant="contained" disabled={buttonDisabled} onClick={(e) => {hSubmitPassword(e)}}>Submit!</Button>
+          <Button variant="contained" disabled={buttonDisabled || rspBDisabled} onClick={(e) => {hSubmitPassword(e)}}>Submit!</Button>
           <Typography variant='h4'>相手の選択</Typography>
           <Box sx={{
             display: progressing? 'flex':'none',
