@@ -82,7 +82,7 @@ function App() {
     }
   }
   // セッション監視を設定
-  const subSession = (newID) => {
+  const subSession = async (newID) => {
     if(usSession != undefined){
       usSession();
     }
@@ -112,8 +112,8 @@ function App() {
         started: false
       });
       ownSessionID = docRef.id;
-      subSession(docRef.id);
       wating();
+      await subSession(docRef.id);
     }else{
       // 見つかったら名簿に追加
       const docMatched = doc(db, "active_sessions", matched.id);
@@ -133,7 +133,7 @@ function App() {
         started: false
       });
       ownSessionID = matched.id;
-      subSession(matched.id);
+      await subSession(matched.id);
     }
   }
 // - - - back/front interface - - -
@@ -150,7 +150,7 @@ function App() {
     setProgressing(false);
   }
   const banned = () => {
-    console.log("session removed you");
+    console.error("session removed you");
     setProgressing(false);
   }
 // - - - frontend with react - - -
