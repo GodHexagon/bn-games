@@ -117,7 +117,7 @@ function App() {
     }else{
       // 見つかったら名簿に追加
       const docMatched = doc(db, "active_sessions", matched.id);
-      if(matched.data().player_id.length < 2){
+      if(matched.data().player_id.length < gameplnum){
         await updateDoc(docMatched, {
           player_id: arrayUnion(playerID),
         });
@@ -165,6 +165,7 @@ function App() {
   return (
     <>
       <Container>
+        <p>test</p>
       </Container>
       <StartModal
         open={openStartModal}
