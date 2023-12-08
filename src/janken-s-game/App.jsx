@@ -86,6 +86,7 @@ function App() {
       );
       setFOppJID(oppJID);
       setButtonDisabled(false);
+      scrollBy(0, 600);
       if(e.data().cli != 0 && e.data().host){
         deleteDoc(doc(db, "j_s_session", e.id))
       }
