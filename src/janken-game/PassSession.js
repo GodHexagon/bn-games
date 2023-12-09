@@ -10,10 +10,11 @@ function PassSession(
 ) {
   const gameplnum = 2;
   const playerID = crypto.randomUUID();
-  var usSession;
-  var ownSessionID = "";
-  var pingReplyed = false;
-  var joining = false;
+  let usSession;
+  let ownSessionID = "";
+  let pingReplyed = false;
+  let joining = false;
+  let prevStart = false;
   // 生存確定
   const pingExit = async (livings) => {
     if(! pingReplyed){
@@ -43,17 +44,18 @@ function PassSession(
   const onHostChange = async (e) => {
     console.log("session update:", e.id, "|", e.data())
     // 接続確認
-    var prev = joining;
+    let prev = joining;
     if(e.data().player_id.includes(playerID)){
-      if(e.data().started){
-        joining = true;
+      joining = true;
+      if(e.data().started && ! prevStart){
+        start();
+        prevStart = true
       }
     }else{
       joining = false;
+      prevStart= false;
     }
-    if(joining && ! prev){
-      start();
-    }else if(prev && ! joining){
+    if(prev && ! joining){
       usSession();
       if(e.data().player_id.length == 0){
         await deleteDoc(doc(db, "active_sessions", e.id));
@@ -72,8 +74,12 @@ function PassSession(
         const livings = e.data().living;
         setTimeout(() => {
           pingExit(livings);
-        }, 1000)
-        if(e.data().player_id.length == livings.length){
+        }, 3000)
+        let allraedy = true;
+        e.data().player_id.forEach((id) => {
+          allraedy = allraedy && livings.includes(id);
+        })
+        if(allraedy){
           pingExit(livings);
         }
       }
