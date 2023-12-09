@@ -141,6 +141,13 @@ function PassSession(
     }
   };
   tryPassword(password);
+  // 返り値
+  const getSid = () => {
+    return ownSessionID;
+  }
+  const getPid =  () => {
+    return playerID;
+  }
   const ping = async () => {
     console.log("pinging...");
     pingReplyed = false;
@@ -151,6 +158,8 @@ function PassSession(
     });
   }
   return ({
+    getSid: getSid,
+    getPid: getPid,
     ping: ping,
   })
 }

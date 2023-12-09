@@ -7,7 +7,7 @@ import PassSession from './PassSession'
 // mui componetns
 import { Container, CircularProgress, Backdrop, Button } from '@mui/material'
 
-let game;
+let sess;
 
 function Page() {
   const wating = () => {
@@ -30,7 +30,7 @@ function Page() {
   const [openStartModal, setOpenStartModal] = useState(true);
   const [progressing, setProgressing] = useState(false);
   const hSubmitPassword = (e, password) => {
-    game = PassSession(
+    sess = PassSession(
       password,
       wating,
       start,
@@ -41,7 +41,7 @@ function Page() {
     setProgressing(true);
   };
   const hPingButton = () => {
-    game.ping();
+    sess.ping();
   }
 
   return (
