@@ -1,15 +1,13 @@
 // react and firebase
 import { useState } from 'react'
-import db from "./../../firebaseConfig"
-import {doc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,  collection, query, where, onSnapshot, arrayUnion } from "firebase/firestore"
 //components
 import StartModal from './startModal'
 import RSPButton from './rspButton'
 import PassSession from './PassSession'
 // mui componetns
-import Container from '@mui/material/Container';
-import CircularProgress from '@mui/material/CircularProgress';
-import Backdrop from '@mui/material/Backdrop'
+import { Container, CircularProgress, Backdrop, Button } from '@mui/material'
+
+let game;
 
 function Page() {
   const wating = () => {
@@ -32,7 +30,7 @@ function Page() {
   const [openStartModal, setOpenStartModal] = useState(true);
   const [progressing, setProgressing] = useState(false);
   const hSubmitPassword = (e, password) => {
-    PassSession(
+    game = PassSession(
       password,
       wating,
       start,
@@ -42,11 +40,15 @@ function Page() {
     setOpenStartModal(false);
     setProgressing(true);
   };
+  const hPingButton = () => {
+    game.ping();
+  }
 
   return (
     <>
       <Container>
         <p>test</p>
+        <Button onClick={(e) => hPingButton()}>Submit ping</Button>
       </Container>
       <StartModal
         open={openStartModal}

@@ -135,5 +135,17 @@ function PassSession(
     }
   };
   tryPassword(password);
+  const ping = async () => {
+    console.log("pinging...");
+    pingReplyed = false;
+    await updateDoc(doc(db, "active_sessions", ownSessionID), {
+      pinging: playerID,
+      living: [],
+      started: false
+    });
+  }
+  return ({
+    ping: ping,
+  })
 }
 export default PassSession
