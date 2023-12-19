@@ -1,5 +1,5 @@
 import db from "./../../firebaseConfig"
-import {doc, getDocs, addDoc,  updateDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion } from "firebase/firestore"
+import {doc, getDocs, addDoc,  updateDoc, deleteDoc, collection, query, where, onSnapshot, arrayUnion, arrayRemove } from "firebase/firestore"
 
 function PassSession(
   password,
@@ -18,25 +18,33 @@ function PassSession(
   // 生存確定
   const pingExit = async (livings) => {
     if(! pingReplyed){
-      pingReplyed = true
-      console.log("exis player:", livings);
-      await updateDoc(doc(db, "active_sessions", ownSessionID), {
-        player_id: livings,
-        pinging: "",
-        living: []
-      });
+      pingReplyed = true;
 
-      if(livings.length == gameplnum){
+      if(livings.length > gameplnum){
+        console.log("session full over, so remove your name.")
         await updateDoc(doc(db, "active_sessions", ownSessionID), {
+          pinging: "",
+          living: [],
+          player_id: arrayRemove(playerID)
+        })
+        errorRoomFull();
+      }else if(livings.length == gameplnum){
+        console.log("exis player:", livings);
+        await updateDoc(doc(db, "active_sessions", ownSessionID), {
+          player_id: livings,
+          pinging: "",
+          living: [],
           started: true
         });
-      }else if(livings.length > gameplnum){
-        errorRoomFull();
       }else{
-        wating();
+        console.log("exis player:", livings);
         await updateDoc(doc(db, "active_sessions", ownSessionID), {
+          player_id: livings,
+          pinging: "",
+          living: [],
           started: false
         });
+        wating();
       }
     }
   };
@@ -44,7 +52,6 @@ function PassSession(
   const onHostChange = async (e) => {
     console.log("session update:", e.id, "|", e.data())
     // 接続確認
-    let prev = joining;
     if(e.data().player_id.includes(playerID)){
       joining = true;
       if(e.data().started && ! prevStart){
@@ -55,8 +62,9 @@ function PassSession(
       joining = false;
       prevStart= false;
     }
-    if(prev && ! joining){
+    if(!joining && e.data().player_id != playerID){
       usSession();
+      ownSessionID = ""
       if(e.data().player_id.length == 0){
         await deleteDoc(doc(db, "active_sessions", e.id));
       }
