@@ -12,7 +12,7 @@ function PassSession(
   const playerID = crypto.randomUUID();
   let usSession;
   let ownSessionID = "";
-  let pingReplyed = false;
+  let pingReplyed = true;
   let joining = false;
   let prevStart = false;
 
@@ -54,7 +54,6 @@ function PassSession(
       await updateDoc(docMatched, {
         pinging: playerID,
         living: [],
-        started: false
       });
       ownSessionID = matched.id;
       await subSession(matched.id);
@@ -77,31 +76,38 @@ function PassSession(
     // 接続確認
     if(e.data().player_id.includes(playerID)){
       joining = true;
-      if(e.data().started && ! prevStart){
-        start();
-        prevStart = true
-      }
     }else{
       joining = false;
-      prevStart= false;
     }
-    if(!joining && e.data().player_id != playerID){
-      usSession();
-      ownSessionID = ""
-      if(e.data().player_id.length == 0){
-        await deleteDoc(doc(db, "active_sessions", e.id));
+
+    if(e.data().pinging == ""){
+      // 生存確認中でないとき
+      if(joining){
+        if(!prevStart && e.data().started){
+          start();
+          prevStart = true
+        }else if(prevStart && !e.data().started){
+          prevStart= false;
+        }
+      }else{
+        usSession();
+        ownSessionID = "";
+        if(e.data().player_id.length == 0){
+          await deleteDoc(doc(db, "active_sessions", e.id));
+        }
+        banned();
       }
-      banned();
-    }
-    // 生存確認が来たとき
-    if(e.data().pinging != ""){
-      if(! e.data().living.includes(playerID)){
+    }else{
+      // セッションが生存確認中
+      if(!e.data().living.includes(playerID)){
+        // 自分の生存確認ができてないとき
         console.log("ping replying...");
         await updateDoc(doc(db, "active_sessions", e.id), {
           living: arrayUnion(playerID),
         });
       }
       if(e.data().pinging == playerID){
+        // 自分が生存確認発信者だったとき
         const livings = e.data().living;
         setTimeout(() => {
           pingExit(livings);
