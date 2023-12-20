@@ -15,38 +15,61 @@ function PassSession(
   let pingReplyed = false;
   let joining = false;
   let prevStart = false;
-  // 生存確定
-  const pingExit = async (livings) => {
-    if(! pingReplyed){
-      pingReplyed = true;
 
-      if(livings.length > gameplnum){
-        console.log("session full over, so remove your name.")
-        await updateDoc(doc(db, "active_sessions", ownSessionID), {
-          pinging: "",
-          living: [],
-          player_id: arrayRemove(playerID)
-        })
-        errorRoomFull();
-      }else if(livings.length == gameplnum){
-        console.log("exis player:", livings);
-        await updateDoc(doc(db, "active_sessions", ownSessionID), {
-          player_id: livings,
-          pinging: "",
-          living: [],
-          started: true
+  const tryPassword = async (password) => {
+    // 合言葉でDBを検索し変数に格納
+    const q = query(collection(db, "active_sessions"), where("password", "==", password));
+    const querySnapshot = await getDocs(q);
+    var matched;
+    querySnapshot.forEach((doc) => {
+      console.log("matched session:", doc.id, " => ", doc.data());
+      matched = doc;
+    });
+  
+    if(matched === undefined){
+      // 見つからなかったら新規作成
+      const docRef = await addDoc(collection(db, "active_sessions"), {
+        password: password,
+        player_id: [playerID],
+        pinging: "",
+        living: [],
+        started: false
+      });
+      ownSessionID = docRef.id;
+      wating();
+      await subSession(docRef.id);
+    }else{
+      // 見つかったら名簿に追加
+      const docMatched = doc(db, "active_sessions", matched.id);
+      if(matched.data().player_id.length < gameplnum){
+        await updateDoc(docMatched, {
+          player_id: arrayUnion(playerID),
         });
       }else{
-        console.log("exis player:", livings);
-        await updateDoc(doc(db, "active_sessions", ownSessionID), {
-          player_id: livings,
-          pinging: "",
-          living: [],
-          started: false
-        });
-        wating();
+        console.log("matched session is full")
       }
+      // 他のプレイヤーの生存確認
+      console.log("pinging...");
+      pingReplyed = false;
+      await updateDoc(docMatched, {
+        pinging: playerID,
+        living: [],
+        started: false
+      });
+      ownSessionID = matched.id;
+      await subSession(matched.id);
     }
+  };
+  // セッション更新監視を設定
+  const subSession = async (newID) => {
+    if(usSession != undefined){
+      usSession();
+    }
+    setTimeout(() => {
+      usSession = onSnapshot(doc(db, "active_sessions", newID), (e) => {
+        onHostChange(e);
+      });
+    }, 500);
   };
   // セッション更新監視
   const onHostChange = async (e) => {
@@ -93,62 +116,43 @@ function PassSession(
       }
     }
   };
-  // セッション監視を設定
-  const subSession = async (newID) => {
-    if(usSession != undefined){
-      usSession();
-    }
-    setTimeout(() => {
-      usSession = onSnapshot(doc(db, "active_sessions", newID), (e) => {
-        onHostChange(e);
-      });
-    }, 500);
-  };
-  const tryPassword = async (password) => {
-    // 合言葉でDBを検索し変数に格納
-    const q = query(collection(db, "active_sessions"), where("password", "==", password));
-    const querySnapshot = await getDocs(q);
-    var matched;
-    querySnapshot.forEach((doc) => {
-      console.log("matched session:", doc.id, " => ", doc.data());
-      matched = doc;
-    });
-  
-    if(matched === undefined){
-      // 見つからなかったら新規作成
-      const docRef = await addDoc(collection(db, "active_sessions"), {
-        password: password,
-        player_id: [playerID],
-        pinging: "",
-        living: [],
-        started: false
-      });
-      ownSessionID = docRef.id;
-      wating();
-      await subSession(docRef.id);
-    }else{
-      // 見つかったら名簿に追加
-      const docMatched = doc(db, "active_sessions", matched.id);
-      if(matched.data().player_id.length < gameplnum){
-        await updateDoc(docMatched, {
-          player_id: arrayUnion(playerID),
+  // 生存確定
+  const pingExit = async (livings) => {
+    if(! pingReplyed){
+      pingReplyed = true;
+
+      if(livings.length > gameplnum){
+        console.log("session full over, so remove your name.")
+        await updateDoc(doc(db, "active_sessions", ownSessionID), {
+          pinging: "",
+          living: [],
+          player_id: arrayRemove(playerID)
+        })
+        errorRoomFull();
+      }else if(livings.length == gameplnum){
+        console.log("exis player:", livings);
+        await updateDoc(doc(db, "active_sessions", ownSessionID), {
+          player_id: livings,
+          pinging: "",
+          living: [],
+          started: true
         });
       }else{
-        console.log("matched session is full")
+        console.log("exis player:", livings);
+        await updateDoc(doc(db, "active_sessions", ownSessionID), {
+          player_id: livings,
+          pinging: "",
+          living: [],
+          started: false
+        });
+        wating();
       }
-      // 他のプレイヤーの生存確認
-      console.log("pinging...");
-      pingReplyed = false;
-      await updateDoc(docMatched, {
-        pinging: playerID,
-        living: [],
-        started: false
-      });
-      ownSessionID = matched.id;
-      await subSession(matched.id);
     }
   };
+
+  // コンストラクタ処理
   tryPassword(password);
+
   // 返り値
   const getSid = () => {
     return ownSessionID;
