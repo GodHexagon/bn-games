@@ -7,8 +7,6 @@ import PassSession from './PassSession'
 // mui componetns
 import { Container, CircularProgress, Backdrop, Button } from '@mui/material'
 
-let sess;
-
 function Page() {
   const wait = () => {
     console.log("waiting for players...")
@@ -30,19 +28,21 @@ function Page() {
 
   const [openStartModal, setOpenStartModal] = useState(true);
   const [progressing, setProgressing] = useState(false);
+  const [game, setGame] = useState({});
+
   const hSubmitPassword = (e, password) => {
-    sess = PassSession(
+    setGame(PassSession(
       password,
       wait,
       start,
       disconnect,
       banned,
-    );
+    ));
     setOpenStartModal(false);
     setProgressing(true);
   };
   const hPingButton = () => {
-    sess.ping();
+    game.ping();
   }
 
   return (
