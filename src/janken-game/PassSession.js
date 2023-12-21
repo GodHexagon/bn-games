@@ -3,9 +3,9 @@ import {doc, getDocs, addDoc,  updateDoc, deleteDoc, collection, query, where, o
 
 function PassSession(
   password,
-  wating = () => {},
+  wait = () => {},
   start = () => {},
-  errorRoomFull = () => {},
+  disconnect = () => {},
   banned = () => {},
 ) {
   const gameplnum = 2;
@@ -36,25 +36,26 @@ function PassSession(
         started: false
       });
       ownSessionID = docRef.id;
-      wating();
       await subSession(docRef.id);
     }else{
-      // 見つかったら名簿に追加
+      // 見つかったら名簿に追加し、同時に生存確認を発信
       const docMatched = doc(db, "active_sessions", matched.id);
-      if(matched.data().player_id.length < gameplnum){
-        await updateDoc(docMatched, {
-          player_id: arrayUnion(playerID),
-        });
-      }else{
-        console.log("matched session is full")
-      }
-      // 他のプレイヤーの生存確認
-      console.log("pinging...");
-      pingReplyed = false;
-      await updateDoc(docMatched, {
+      let newDoc = {
         pinging: playerID,
         living: [],
-      });
+      };
+      if(matched.data().player_id.length < gameplnum){
+        newDoc = {
+          pinging: playerID,
+          living: [],
+          player_id: arrayUnion(playerID),
+        }
+      }else{
+        console.warn("matched session is full");
+      }
+      console.log("pinging...");
+      pingReplyed = false;
+      await updateDoc(docMatched, newDoc);
       ownSessionID = matched.id;
       await subSession(matched.id);
     }
@@ -73,7 +74,7 @@ function PassSession(
   // セッション更新監視
   const onHostChange = async (e) => {
     console.log("session update:", e.id, "|", e.data())
-    // 接続確認
+    // 参加確認
     if(e.data().player_id.includes(playerID)){
       joining = true;
     }else{
@@ -87,7 +88,11 @@ function PassSession(
           start();
           prevStart = true
         }else if(prevStart && !e.data().started){
-          prevStart= false;
+          disconnect();
+          prevStart = false;
+        }else if(e.data().player_id.length < gameplnum){
+          wait();
+          prevStart = false
         }
       }else{
         usSession();
@@ -95,7 +100,7 @@ function PassSession(
         if(e.data().player_id.length == 0){
           await deleteDoc(doc(db, "active_sessions", e.id));
         }
-        banned();
+        banned(e.data().player_id.length >= gameplnum);
       }
     }else{
       // セッションが生存確認中
@@ -134,7 +139,6 @@ function PassSession(
           living: [],
           player_id: arrayRemove(playerID)
         })
-        errorRoomFull();
       }else if(livings.length == gameplnum){
         console.log("exis player:", livings);
         await updateDoc(doc(db, "active_sessions", ownSessionID), {
@@ -151,7 +155,6 @@ function PassSession(
           living: [],
           started: false
         });
-        wating();
       }
     }
   };
@@ -172,7 +175,6 @@ function PassSession(
     await updateDoc(doc(db, "active_sessions", ownSessionID), {
       pinging: playerID,
       living: [],
-      started: false
     });
   }
   return ({

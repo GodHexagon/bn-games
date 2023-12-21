@@ -10,20 +10,21 @@ import { Container, CircularProgress, Backdrop, Button } from '@mui/material'
 let sess;
 
 function Page() {
-  const wating = () => {
-    console.log("wating for matching...");
+  const wait = () => {
+    console.log("waiting for players...")
     setProgressing(false);
   }
   const start = () => {
     console.log("game start!");
     setProgressing(false);
   }
-  const errorRoomFull = () => {
-    console.warn("session is full over");
-    setProgressing(false);
+  const disconnect = () => {
   }
-  const banned = () => {
-    console.error("session removed you");
+  const banned = (isFUll) => {
+    console.warn("session removed you");
+    if(isFUll){
+      console.log('Session has full')
+    }
     setProgressing(false);
   }
 
@@ -32,9 +33,9 @@ function Page() {
   const hSubmitPassword = (e, password) => {
     sess = PassSession(
       password,
-      wating,
+      wait,
       start,
-      errorRoomFull,
+      disconnect,
       banned,
     );
     setOpenStartModal(false);
